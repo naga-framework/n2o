@@ -170,6 +170,7 @@ cookies_req(Req) -> ?BRIDGE:cookies(Req).
 headers(Req) -> ?BRIDGE:headers(Req).
 peer(Req) -> ?BRIDGE:peer(Req).
 path(Req) -> ?BRIDGE:path(Req).
+method(Req) -> ?BRIDGE:method(Req).
 request_body(Req) -> ?BRIDGE:request_body(Req).
 delete_cookie(Cookie,Req) -> ?BRIDGE:delete_cookie(Cookie,Req).
 header(Name,Val,Req) -> ?BRIDGE:header(Name, Val, Req).
