@@ -7,7 +7,11 @@
 main() ->
     case wf:user() of
          undefined -> wf:redirect("login.htm"), redirect_wait();
-         _ -> #dtl{file = "index", app=review,bindings=[{body,body()},{list,list()}]} end.
+         _ -> #dtl{file = "index", app=review,bindings=[{body,body()},{list,list()},{javascript,(?MODULE:(wf:config(n2o,mode,dev)))()}]} end.
+
+prod() ->   [ #script{src="/static/review.js"} ].
+dev()  -> [ [ #script{src=lists:concat(["/n2o/protocols/",X,".js"])} || X <- [bert,nitrogen] ],
+            [ #script{src=lists:concat(["/n2o/",Y,".js"])}           || Y <- [bullet,n2o,ftp,utf8,validation] ] ].
 
 redirect_wait() -> #dtl{}.
 list() -> "<iframe src=http://synrc.com/apps/"++code()++" frameborder=0 width=700 height=1250></iframe>".
@@ -34,9 +38,9 @@ event(logout) ->
     wf:redirect("login.htm");
 
 event(chat) ->
-    wf:info(?MODULE,"Chat pressed~n",[]),
     User = wf:user(),
     Message = wf:q(message),
+    wf:info(?MODULE,"Chat pressed: ~p~n",[Message]),
     Room = code(),
     kvs:add(#entry{id=kvs:next_id("entry",1),from=wf:user(),feed_id={room,Room},media=Message}),
     wf:send({topic,Room},#client{data={User,Message}});
@@ -54,8 +58,9 @@ event(#bin{data=Data}) ->
 
 event(#ftp{sid=Sid,filename=Filename,status={event,stop}}=Data) ->
     wf:info(?MODULE,"FTP Delivered ~p~n",[Data]),
-    erlang:put(message,wf:render(#link{href=iolist_to_binary(["/static/",wf:url_encode(Filename)]),
-                                       body=filename:basename(Filename)})),
+    Name = hd(lists:reverse(string:tokens(wf:to_list(Filename),"/"))),
+    erlang:put(message,wf:render(#link{href=iolist_to_binary(["/static/",Sid,"/",wf:url_encode(Name)]),body=Name})),
+    wf:info(?MODULE,"Message ~p~n",[wf:q(message)]),
     event(chat);
 
 event(Event) ->
